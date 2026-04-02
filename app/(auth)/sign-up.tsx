@@ -152,10 +152,10 @@ export default function SignUp() {
           }
 
           const url = decorateUrl("/");
-          if (url.startsWith("http")) {
+          if (typeof window !== "undefined" && url.startsWith("http")) {
             window.location.href = url;
           } else {
-            router.push(url as Href);
+            router.replace(url as Href);
           }
         },
       });

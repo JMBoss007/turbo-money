@@ -87,11 +87,10 @@ export default function SignIn() {
 
             // Navigate to home
             const url = decorateUrl("/");
-            if (url.startsWith("http")) {
-              // Web only
+            if (typeof window !== "undefined" && url.startsWith("http")) {
               window.location.href = url;
             } else {
-              router.push(url as Href);
+              router.replace(url as Href);
             }
           },
         });
