@@ -32,10 +32,7 @@ const Settings = () => {
         </TextStyled>
 
         <ViewStyled className="mt-auto mb-10 gap-3">
-          <PressableStyled
-            className="auth-button"
-            onPress={handleSignOut}
-          >
+          <PressableStyled className="auth-button" onPress={handleSignOut}>
             <TextStyled className="auth-button-text">Sign out</TextStyled>
           </PressableStyled>
         </ViewStyled>

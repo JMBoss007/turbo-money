@@ -1,6 +1,7 @@
 import "@/global.css";
 import { useSignIn } from "@clerk/expo";
 import { type Href, Link, useRouter } from "expo-router";
+import { styled } from "nativewind";
 import React, { useState } from "react";
 import {
   ActivityIndicator,
@@ -11,7 +12,6 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { styled } from "nativewind";
 
 const SafeAreaViewStyled = styled(SafeAreaView);
 const ScrollViewStyled = styled(ScrollView);
@@ -115,8 +115,9 @@ export default function SignIn() {
     }
   };
 
-  const isLoading = fetchStatus === "loading";
-  const isFormValid = email && password && !localErrors.email && !localErrors.password;
+  const isLoading = fetchStatus === "fetching";
+  const isFormValid =
+    email && password && !localErrors.email && !localErrors.password;
 
   return (
     <SafeAreaViewStyled className="auth-safe-area">
@@ -133,20 +134,16 @@ export default function SignIn() {
                 <TextStyled className="auth-logo-mark-text">T</TextStyled>
               </ViewStyled>
               <ViewStyled>
-                <TextStyled className="auth-wordmark">turbo-money</TextStyled>
-                <TextStyled className="auth-wordmark-sub">
-                  Subscription Manager
-                </TextStyled>
+                <TextStyled className="auth-wordmark">Turbo Money</TextStyled>
               </ViewStyled>
             </ViewStyled>
           </ViewStyled>
 
           {/* Title and Subtitle */}
           <ViewStyled className="mt-12">
-            <TextStyled className="auth-title">Welcome back</TextStyled>
-            <TextStyled className="auth-subtitle">
-              Sign in to continue managing your subscriptions
-            </TextStyled>
+            <TextStyled className="auth-title">                Welcome back</TextStyled>
+            <TextStyled className="auth-subtitle">          {" "}Sign in to continue managing your</TextStyled>
+            <TextStyled className="auth-subtitle">        SUBSCRIPTIONS</TextStyled>
           </ViewStyled>
 
           {/* Form Card */}
@@ -154,7 +151,7 @@ export default function SignIn() {
             <ViewStyled className="auth-form">
               {/* Email Field */}
               <ViewStyled className="auth-field">
-                <TextStyled className="auth-label">Email</TextStyled>
+                <TextStyled className="auth-label">Email Address</TextStyled>
                 <TextInputStyled
                   className={`auth-input ${
                     localErrors.email ? "auth-input-error" : ""
@@ -235,10 +232,12 @@ export default function SignIn() {
               {/* Navigation Link */}
               <ViewStyled className="auth-link-row">
                 <TextStyled className="auth-link-copy">
-                  New to turbo-money?{" "}
+                  New to Turbo Money?{" "}
                 </TextStyled>
                 <Link href="/(auth)/sign-up">
-                  <TextStyled className="auth-link">Create an account</TextStyled>
+                  <TextStyled className="auth-link">
+                    Create an account
+                  </TextStyled>
                 </Link>
               </ViewStyled>
             </ViewStyled>

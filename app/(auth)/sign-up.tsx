@@ -1,17 +1,17 @@
 import "@/global.css";
 import { useSignUp } from "@clerk/expo";
 import { type Href, Link, useRouter } from "expo-router";
+import { styled } from "nativewind";
 import React, { useState } from "react";
 import {
-  ActivityIndicator,
-  Pressable,
-  ScrollView,
-  Text,
-  TextInput,
-  View,
+    ActivityIndicator,
+    Pressable,
+    ScrollView,
+    Text,
+    TextInput,
+    View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { styled } from "nativewind";
 
 const SafeAreaViewStyled = styled(SafeAreaView);
 const ScrollViewStyled = styled(ScrollView);
@@ -117,63 +117,97 @@ export default function SignUp() {
   };
 
   const handleVerify = async () => {
-    if (!validateCode()) return;
+  const cleanCode = verificationCode.trim();
 
-    try {
-      await signUp.verifications.verifyEmailCode({
-        code: verificationCode,
-      });
+  if (!cleanCode) {
+    setLocalErrors((prev) => ({
+      ...prev,
+      code: "Verification code is required",
+    }));
+    return;
+  }
 
-      if (signUp.status === "complete") {
-        await signUp.finalize({
-          navigate: ({ session, decorateUrl }) => {
-            // Handle session tasks
-            if (session?.currentTask) {
-              console.log("Session task:", session.currentTask);
-              return;
-            }
+  try {
+    const { error } = await signUp.verifications.verifyEmailCode({
+      code: cleanCode,
+    });
 
-            // Navigate to home
-            const url = decorateUrl("/");
-            if (url.startsWith("http")) {
-              // Web only
-              window.location.href = url;
-            } else {
-              router.push(url as Href);
-            }
-          },
-        });
-      } else {
-        setLocalErrors((prev) => ({
-          ...prev,
-          general: "Verification failed. Please check your code and try again.",
-        }));
-      }
-    } catch (error) {
-      console.error("Verification error:", error);
+    if (error) {
+      console.error("Verification error:", JSON.stringify(error, null, 2));
+
       setLocalErrors((prev) => ({
         ...prev,
-        general: "Invalid verification code. Please try again.",
+        code: error.message || "Verification failed. Please try again.",
+        general: "",
       }));
+      return;
     }
-  };
+
+    if (signUp.status === "complete") {
+      await signUp.finalize({
+        navigate: ({ session, decorateUrl }) => {
+          if (session?.currentTask) {
+            console.log("Session task:", session.currentTask);
+            return;
+          }
+
+          const url = decorateUrl("/");
+          if (url.startsWith("http")) {
+            window.location.href = url;
+          } else {
+            router.push(url as Href);
+          }
+        },
+      });
+    } else {
+  console.log("SIGN UP STATUS:", signUp.status);
+  console.log("MISSING FIELDS:", signUp.missingFields);
+  console.log("UNVERIFIED FIELDS:", signUp.unverifiedFields);
+  console.log("REQUIRED FIELDS:", signUp.requiredFields);
+
+  setLocalErrors((prev) => ({
+    ...prev,
+    general: `Verification did not complete. Missing: ${
+      signUp.missingFields?.join(", ") || "unknown"
+    }`,
+  }));
+}
+  } catch (error) {
+    console.error("Unexpected verification error:", error);
+
+    setLocalErrors((prev) => ({
+      ...prev,
+      general: "Something went wrong during verification. Please try again.",
+    }));
+  }
+};
 
   const handleResendCode = async () => {
-    try {
-      await signUp.verifications.sendEmailCode();
+  try {
+    const { error } = await signUp.verifications.sendEmailCode();
+
+    if (error) {
+      console.error("Resend error:", JSON.stringify(error, null, 2));
       setLocalErrors((prev) => ({
         ...prev,
-        general: "",
-        code: "",
+        general: error.message || "Failed to resend code. Please try again.",
       }));
-    } catch (error) {
-      console.error("Resend error:", error);
-      setLocalErrors((prev) => ({
-        ...prev,
-        general: "Failed to resend code. Please try again.",
-      }));
+      return;
     }
-  };
+
+    setLocalErrors((prev) => ({
+      ...prev,
+      general: "",
+      code: "",
+    }));
+  } catch (error) {
+    console.error("Unexpected resend error:", error);
+    setLocalErrors((prev) => ({
+      ...prev,
+      general: "Failed to resend code. Please try again.",
+    }));
+  }
+};
 
   const handleBackToForm = () => {
     setStep("form");
@@ -187,7 +221,7 @@ export default function SignUp() {
     });
   };
 
-  const isLoading = fetchStatus === "loading";
+  const isLoading = fetchStatus === "fetching";
 
   if (step === "verification") {
     const isFormValid = verificationCode && !localErrors.code;
@@ -207,20 +241,16 @@ export default function SignUp() {
                   <TextStyled className="auth-logo-mark-text">T</TextStyled>
                 </ViewStyled>
                 <ViewStyled>
-                  <TextStyled className="auth-wordmark">turbo-money</TextStyled>
-                  <TextStyled className="auth-wordmark-sub">
-                    Subscription Manager
-                  </TextStyled>
+                  <TextStyled className="auth-wordmark">Turbo Money</TextStyled>
                 </ViewStyled>
               </ViewStyled>
             </ViewStyled>
 
             {/* Title and Subtitle */}
             <ViewStyled className="mt-12">
-              <TextStyled className="auth-title">Verify your email</TextStyled>
-              <TextStyled className="auth-subtitle">
-                We sent a verification code to {email}
-              </TextStyled>
+              <TextStyled className="auth-title">              Verify your email</TextStyled>
+              <TextStyled className="auth-subtitle">            We sent a verification code to</TextStyled>
+              <TextStyled className="auth-subtitle">            {email}</TextStyled>
             </ViewStyled>
 
             {/* Form Card */}
@@ -228,7 +258,9 @@ export default function SignUp() {
               <ViewStyled className="auth-form">
                 {/* Verification Code Field */}
                 <ViewStyled className="auth-field">
-                  <TextStyled className="auth-label">Verification Code</TextStyled>
+                  <TextStyled className="auth-label">
+                    Verification Code
+                  </TextStyled>
                   <TextInputStyled
                     className={`auth-input ${
                       localErrors.code ? "auth-input-error" : ""
@@ -238,9 +270,11 @@ export default function SignUp() {
                     keyboardType="number-pad"
                     value={verificationCode}
                     onChangeText={(text) => {
-                      setVerificationCode(text);
+                      const cleanText = text.replace(/\D/g, "");
+                      setVerificationCode(cleanText);
+
                       if (localErrors.code) {
-                        setLocalErrors((prev) => ({ ...prev, code: "" }));
+                        setLocalErrors((prev) => ({ ...prev, code: "", general: "" }));
                       }
                     }}
                     maxLength={6}
@@ -332,20 +366,16 @@ export default function SignUp() {
                 <TextStyled className="auth-logo-mark-text">T</TextStyled>
               </ViewStyled>
               <ViewStyled>
-                <TextStyled className="auth-wordmark">turbo-money</TextStyled>
-                <TextStyled className="auth-wordmark-sub">
-                  Subscription Manager
-                </TextStyled>
+                <TextStyled className="auth-wordmark">Turbo Money</TextStyled>
               </ViewStyled>
             </ViewStyled>
           </ViewStyled>
 
           {/* Title and Subtitle */}
           <ViewStyled className="mt-12">
-            <TextStyled className="auth-title">Create an account</TextStyled>
-            <TextStyled className="auth-subtitle">
-              Start managing your subscriptions smarter today
-            </TextStyled>
+            <TextStyled className="auth-title">            Create an account</TextStyled>
+            <TextStyled className="auth-subtitle">             Start managing your subscriptions smarter</TextStyled>
+            <TextStyled className="auth-subtitle">             TODAY</TextStyled>
           </ViewStyled>
 
           {/* Form Card */}
@@ -353,7 +383,7 @@ export default function SignUp() {
             <ViewStyled className="auth-form">
               {/* Email Field */}
               <ViewStyled className="auth-field">
-                <TextStyled className="auth-label">Email</TextStyled>
+                <TextStyled className="auth-label">Email Address</TextStyled>
                 <TextInputStyled
                   className={`auth-input ${
                     localErrors.email ? "auth-input-error" : ""
@@ -474,6 +504,7 @@ export default function SignUp() {
                   <TextStyled className="auth-link">Sign in</TextStyled>
                 </Link>
               </ViewStyled>
+              <ViewStyled nativeID="clerk-captcha" />
             </ViewStyled>
           </ViewStyled>
         </ViewStyled>
