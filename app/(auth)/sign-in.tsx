@@ -12,6 +12,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { usePostHog } from "posthog-react-native";
 
 const SafeAreaViewStyled = styled(SafeAreaView);
 const ScrollViewStyled = styled(ScrollView);
