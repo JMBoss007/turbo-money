@@ -2,11 +2,12 @@ import CreateSubscriptionModal from "@/components/CreateSubscriptionModal";
 import ListHeading from "@/components/ListHeading";
 import SubscriptionCard from "@/components/SubscriptionCard";
 import UpcomingSubscriptionCard from "@/components/UpcomingSubscriptionCard";
-import { UPCOMING_SUBSCRIPTIONS, HOME_BALANCE } from "@/constants/data";
-import { useSubscriptions } from "@/lib/SubscriptionContext";
+import { HOME_BALANCE, UPCOMING_SUBSCRIPTIONS } from "@/constants/data";
 import { icons } from "@/constants/icons";
 import images from "@/constants/images";
 import "@/global.css";
+import { useProfilePicture } from "@/lib/ProfileContext";
+import { useSubscriptions } from "@/lib/SubscriptionContext";
 import { formatCurrency } from "@/lib/utils";
 import { useUser } from "@clerk/expo";
 import dayjs from "dayjs";
@@ -20,6 +21,7 @@ const SafeAreaView = styled(RNSafeAreaView);
 export default function App() {
   const { user, isLoaded } = useUser();
   const { subscriptions, addSubscription } = useSubscriptions();
+  const { profileImageUri } = useProfilePicture();
 
   const [expandedSubscriptionId, setExpandedSubscriptionId] = useState<
     string | null
@@ -44,7 +46,12 @@ export default function App() {
             <>
               <View className="home-header">
                 <View className="home-user">
-                  {user?.imageUrl ? (
+                  {profileImageUri ? (
+                    <Image
+                      source={{ uri: profileImageUri }}
+                      className="home-avatar"
+                    />
+                  ) : user?.imageUrl ? (
                     <Image
                       source={{ uri: user.imageUrl }}
                       className="home-avatar"
